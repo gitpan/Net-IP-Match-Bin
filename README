@@ -1,0 +1,150 @@
+Net::IP::Match::XS2 version 0.01
+=============================
+
+NAME
+       Net::IP::Match::XS2 - Perl extension for match IP address against Net
+       ranges
+
+SYNOPSIS
+         use Net::IP::Match::XS2;
+
+         my $ipr = Net::IP::Match::XS2->new();
+         $ipr->add("10.1.1.0", 25);
+         ...
+         $ipr->add("192.168.2.128", 26);
+
+         $cidr = $ipr->match_ip("192.168.2.131");
+
+DESCRIPTION
+       This module is XS implementation of matching IP address against Net
+       ranges.  Using similar method to Net::IP::Match::Regexp in storing Net
+       ranges into memory. By implementing in XS C-code, more fast setup time
+       than Regexp module. This module is useful when Net ranges change often.
+
+METHODS
+       new()
+           Create IP range object and initialize it.
+
+       $ipr->add( $net, $mask )
+           Add an IP address ($net) into the object. $mask is 1 .. 32 CIDR
+           mask bit value.
+
+       $cidr = $ipr->match_ip( $ip )
+           Searches matching $ip against previously setup networks. Returns
+           matched Network in CIDR format (xxx.xxx.xxx.xxx/nnn). or undef
+           unless matched.
+
+SEE ALSO
+       Net::IP::Match::Regexp
+
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires C compiler and standard C Libraries to build.
+
+
+COPYRIGHT AND LICENCE
+
+
+Copyright (C) 2009 by Tomo
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
+TODO
+
+o Create CIDR map from arguments of constructor (new()).
+o Setup / return arbitrary values when matching.
+o Measure appropriate memory size. especially for setup time.
+o .., so on.
+
+SPEED TEST
+
+output from benchmark/speedtest.pl within the Net::IP::Match::Regexp package.
+(made modification for my package. diff is below)
+
+[ Mac mini / Core 2 Duo 2GHz 4GB Mem / Mac OS X 10.5.8 ]
+
+$ ./speedtest.pl -s -n 1,10,100,1000,10000 -i 100000
+Initialization time of test: 0.390697
+
+Networks: 1, IPs: 100000
+Test name              | Setup time | Run time | Total time | Errors 
+-----------------------+------------+----------+------------+--------
+Net::IP::Match::XS2    |    0.023   |  0.208   |    0.231   | n/a
+Net::IP::Match::Regexp |    0.000   |  0.838   |    0.838   | n/a
+
+Networks: 10, IPs: 100000
+Test name              | Setup time | Run time | Total time | Errors 
+-----------------------+------------+----------+------------+--------
+Net::IP::Match::XS2    |    0.024   |  0.205   |    0.229   | n/a
+Net::IP::Match::Regexp |    0.002   |  0.971   |    0.973   | n/a
+
+Networks: 100, IPs: 100000
+Test name              | Setup time | Run time | Total time | Errors 
+-----------------------+------------+----------+------------+--------
+Net::IP::Match::XS2    |    0.023   |  0.210   |    0.234   | n/a
+Net::IP::Match::Regexp |    0.013   |  1.004   |    1.018   | n/a
+
+Networks: 1000, IPs: 100000
+Test name              | Setup time | Run time | Total time | Errors 
+-----------------------+------------+----------+------------+--------
+Net::IP::Match::XS2    |    0.025   |  0.242   |    0.267   | n/a
+Net::IP::Match::Regexp |    0.111   |  1.076   |    1.187   | n/a
+
+Networks: 10000, IPs: 100000
+Test name              | Setup time | Run time | Total time | Errors 
+-----------------------+------------+----------+------------+--------
+Net::IP::Match::XS2    |    0.038   |  0.329   |    0.367   | n/a
+Net::IP::Match::Regexp |    0.698   |  1.150   |    1.848   | n/a
+
+
+--- speedtest.pl.orig   2009-10-02 21:00:49.000000000 +0900
++++ speedtest.pl        2009-10-02 14:16:03.000000000 +0900
+@@ -3,7 +3,7 @@
+ use strict;
+ use lib qw(lib);
+ use Net::IP::Match::Regexp qw();
+-use Net::IP::Match::XS qw();
++use Net::IP::Match::XS2 qw();
+ 
+ use Time::HiRes qw(gettimeofday tv_interval);
+ use List::Util qw(max);
+@@ -92,19 +92,23 @@
+       },
+    },
+    {
+-      name => "Net::IP::Match::XS", ###############
++      name => "Net::IP::Match::XS2", ###############
+       bool => 1, # this test just returns true/false, not the ID of the matched network
+       setup => sub {
+          my $ranges = shift;
+          my $test = shift;
+ 
+-         return [map {$_->[3]."/".$_->[1]} @$ranges];
++       my $ipm = Net::IP::Match::XS2->new();
++
++       $ipm->add($_->[3], $_->[1]) for @$ranges;
++       return $ipm;
++
+       },
+       match => sub {
+          my $ip = shift;
+          my $ranges = shift;
+ 
+-         return Net::IP::Match::XS::match_ip($ip, @$ranges);
++         return $ranges->match_ip($ip);
+       },
+    },
+    {
+
