@@ -2,7 +2,7 @@ Changes
 Makefile.PL
 MANIFEST
 Bin.xs
-Bin.pm
+lib/Net/IP/Match/Bin.pm		Net::IP::Match::Bin Perl Module
 ppport.h
 README
 t/0_new.t

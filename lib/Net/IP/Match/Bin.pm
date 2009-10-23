@@ -25,7 +25,7 @@ our @EXPORT = qw(
 	match_ip
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 *import = \&Exporter::import;
 
@@ -53,13 +53,22 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
+our @BITS = (
+    0x80000000, 0x40000000, 0x20000000, 0x10000000, 0x08000000, 0x04000000,
+    0x02000000, 0x01000000, 0x00800000, 0x00400000, 0x00200000, 0x00100000,
+    0x00080000, 0x00040000, 0x00020000, 0x00010000, 0x00008000, 0x00004000,
+    0x00002000, 0x00001000, 0x00000800, 0x00000400, 0x00000200, 0x00000100,
+    0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008, 0x00000004,
+    0x00000002, 0x00000001,
+    );
+
 sub new {
     my $this = shift;
     my $class = ref($this) || $this;
     my $self = {};
     bless $self => $class;
 
-    my $tree = {};
+    my $tree = [];
     $self->{Tree} = $tree;
     return $self;
 }
@@ -90,19 +99,19 @@ IPRANGE:
       }
 
       my $tree = $self->{Tree}; # root
-      my @bits = split m//xms, unpack 'B32', pack 'C4', split m/[.]/xms, $ip;
 
-      for my $bit ( @bits[ 0 .. $mask - 1 ] ) {
-
-	  unless (exists $tree->{$bit}) {
-	      $tree->{$bit} ||= {};
+      my $addr = unpack 'N', pack 'C4', split /[.]/, $ip;
+      for (my $i = 0; $i < $mask; $i++) {
+	  my $bit = $addr & $BITS[$i] ? 1 : 0;
+	  unless (defined $tree->[$bit]) {
+	      $tree->[$bit] ||= [];
 	  }
-	  $tree = $tree->{$bit};   # Follow one branch
+	  $tree = $tree->[$bit];   # Follow one branch
       }
 
-      # Our $tree is now a leaf node of %tree.  Set its value
+      # Our $tree is now a leaf node of @$tree.  Set its value
       # If the code is already set, it's a non-fatal error (redundant data)
-      $tree->{code} ||= $match;
+      $tree->[2] ||= $match;
    }
    return $self;
 }
@@ -111,12 +120,13 @@ sub match_ip {
     my ($self, $ip) = @_;
 
     my $tree = $self->{Tree};
-    my @bits = split m//xms, unpack 'B32', pack 'C4', split m/[.]/xms, $ip;
+    my $addr = unpack 'N', pack 'C4', split /[.]/, $ip;
 
-    for my $bit ( @bits[ 0 .. 31 ] ) {
-        return $tree->{code} if exists $tree->{code};
-	return undef unless exists $tree->{$bit};
-        $tree = $tree->{$bit};   # Follow one branch
+    for (my $i = 0; $i < 32; $i++) {
+	return $tree->[2] if defined $tree->[2];
+	my $bit = $addr & $BITS[$i] ? 1 : 0;
+	return undef unless defined $tree->[$bit];
+	$tree = $tree->[$bit];
     }
     return undef;
 }
@@ -124,19 +134,19 @@ sub match_ip {
 sub _dump {
     my ($tree, $bits, $lvl) = @_;
 
-    if (exists $tree->{code}) {
+    if (defined $tree->[2]) {
 	for (my $i=$lvl; $i<32; $i++) {
 	    $bits->[$i] = 0;
 	}
 	print join(".", unpack("C4", pack("B32", join('',@$bits)))) . "/$lvl\n";
     }
-    if (exists $tree->{0}) {
+    if (defined $tree->[0]) {
 	$bits->[$lvl] = 0;
-	_dump($tree->{0}, $bits, $lvl+1);
+	_dump($tree->[0], $bits, $lvl+1);
     }
-    if (exists $tree->{1}) {
+    if (exists $tree->[1]) {
 	$bits->[$lvl] = 1;
-	_dump($tree->{1}, $bits, $lvl+1);
+	_dump($tree->[1], $bits, $lvl+1);
     }
 }
 

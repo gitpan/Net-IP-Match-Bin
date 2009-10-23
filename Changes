@@ -1,6 +1,16 @@
-Revision history for Perl extension Net-IP-Match-XS2.
+Revision history for Perl extension Net-IP-Match-Bin.
 
 0.01  Wed Sep 30 22:24:45 2009
 	- original version; created by h2xs 1.23 with options
 		-A -n Net-IP-Match-XS2
+
+0.01  Tue Oct 20 22:00:00 2009
+	- original version; created from Net-IP-Match-XS2
+
+0.02  Wed Oct 21 22:00:00 2009
+	- added Perl alternative.
+	- added bench mark result.
+
+0.03  Thu Oct 22
+	- little bit speed-up Perl alt. verson.
 

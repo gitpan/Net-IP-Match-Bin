@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-IP-Match-Bin
-version:            0.02
+version:            0.03
 abstract:           Perl extension for match IP addresses against Net ranges
 author:
     - Tomo <tomo_at_c-wind.com>

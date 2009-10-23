@@ -12,10 +12,10 @@ $DEFS .= " -DPVER=$pv";
 # the contents of the Makefile that is written.
 WriteMakefile(
     NAME              => 'Net::IP::Match::Bin',
-    VERSION_FROM      => 'Bin.pm', # finds $VERSION
+    VERSION_FROM      => 'lib/Net/IP/Match/Bin.pm', # finds $VERSION
     PREREQ_PM         => {}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'Bin.pm', # retrieve abstract from module
+      (ABSTRACT_FROM  => 'lib/Net/IP/Match/Bin.pm', # retrieve abstract from module
        AUTHOR         => 'Tomo <tomo_at_c-wind.com>') : ()),
     LIBS              => [''], # e.g., '-lm'
     DEFINE            => "$DEFS", # e.g., '-DHAVE_SOMETHING'
