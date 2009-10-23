@@ -25,7 +25,7 @@ our @EXPORT = qw(
 	match_ip
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 *import = \&Exporter::import;
 
