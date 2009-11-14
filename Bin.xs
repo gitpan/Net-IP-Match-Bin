@@ -20,7 +20,9 @@
 #ifdef SOLARIS
 typedef   uint32_t    u_int32_t;
 #else
+# if ! (defined(LINUX) || defined(CYGWIN))
 typedef   u_int32_t   in_addr_t;
+# endif
 #endif
 
 u_int32_t bits[] = {
@@ -304,7 +306,8 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
   int i, j, num;
   STRLEN len;
   I32 klen;
-  SV* val;
+  SV** val;
+  SV* hval;
   char *str, *key;
   char ip[20];
   char *p;
@@ -313,9 +316,10 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
   switch (SvTYPE(sv)) {
   case SVt_PVAV:
     num = av_len((AV*)sv);
+    /* printf("num: %d\n", num); */
     for (j=0; j<=num; j++) {
-      val = av_shift((AV*)sv);
-      str = SvPVbyte(val, len);
+      val = av_fetch((AV*)sv, j, 0);
+      str = SvPVbyte(*val, len);
       /*printf("AV(%d)> %s (%d)\n", j, str, len);*/
       p = ip;
       parse_net(str, len, &p, &mask);
@@ -325,8 +329,8 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
   case SVt_PVHV:
     num = hv_iterinit((HV*)sv);
     for (j=0; j<num; j++) {
-      val = hv_iternextsv((HV*)sv, &key, &klen);
-      str = SvPVbyte(val, len);
+      hval = hv_iternextsv((HV*)sv, &key, &klen);
+      str = SvPVbyte(hval, len);
       /*
       printf("HV(%d)> %s : %s (%d)\n", j, key, str, klen);
       printf(">str %x\n", str);
@@ -334,7 +338,7 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
       p = ip;
       parse_net(key, klen, &p, &mask);
 
-      if (SvTRUE(val)) {
+      if (SvTRUE(hval)) {
 	regist(ctx, ip, mask, str);
       } else {
 	regist(ctx, ip, mask, NULL);
@@ -439,6 +443,8 @@ match_ip(...)
 	char *p;
 	int i;
 	SV* sv;
+	int func_call;
+	int res;
      PPCODE:
 	if (items < 2) {
 	    /* too few args */
@@ -456,13 +462,15 @@ match_ip(...)
 		XSRETURN_UNDEF;
 	    }
 	    i = 0;
+	    func_call = 1;
 	} else {
 	    ctx = INT2PTR(XS2_CTX*, SvIV(SvRV(ST(0))));
 	    i = 1;
+	    func_call = 0;
 	}
 	ip = SvPVbyte(ST(i), len);
 
-	/*printf("%s\n", ip);*/
+	/* printf("%s\n", ip); */
 	
 	i++;
 	for (; i<items; i++) {
@@ -475,7 +483,12 @@ match_ip(...)
 	}
 
 	p = out;
-	if (_match_ip(aTHX_ ctx, ip, &p) > 0) {
+	res = _match_ip(aTHX_ ctx, ip, &p);
+	if (func_call > 0) {
+	  free_m(aTHX_ ctx);
+	  Safefree(ctx);
+	}
+	if (res > 0) {
 	  ST(0) = newSVpv(p, 0);
 	  sv_2mortal(ST(0));
 	  XSRETURN(1);

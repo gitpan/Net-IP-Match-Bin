@@ -14,3 +14,7 @@ Revision history for Perl extension Net-IP-Match-Bin.
 0.03  Thu Oct 22
 	- little bit speed-up Perl alt. verson.
 
+0.04  Thu Nov 14
+	- Fix mem leak at add().
+	- Fix _add() for registering ARRAY data.
+
