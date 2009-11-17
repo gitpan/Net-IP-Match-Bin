@@ -25,7 +25,7 @@ our @EXPORT = qw(
 	match_ip
 );
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 eval {
     require XSLoader;
@@ -90,9 +90,16 @@ won't be suitable.
 
 Create IP range object and initialize it.
 
-=item $ipm->add( $net )
+=item $ipm->add( $net | $arrayref | $hashref, ... )
 
-Add an Network address (xxx.xxx.xxx.xxx/mask) into the object. mask is 1 .. 32 CIDR mask bit value.
+Add Network address (xxx.xxx.xxx.xxx/mask) into the object. mask is 1 .. 32 CIDR mask bit value.
+
+    $ipm->add( [ "10.1.0.0/16", "10.2.2.128/25", "192.168.0.0/27" ] );
+
+    $ipm->add( { "10.1.0.0/17" => "Net A", "10.2.2.0/24" => "Net B",
+		"192.168.0.0/27" => "Net X" } );
+When HASH ref is used as arguments, match_ip() returns the value when matched.
+
 
 =item $cidr = $ipm->match_ip( $ip )
 

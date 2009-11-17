@@ -16,7 +16,7 @@ $DEFS .= " -DPVER=$pv";
 
 my $SRCS = [];
 if (test_compile()) {
-#    $SRCS = ["Bin.c"];
+    $SRCS = ["Bin.c"];
 }
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
