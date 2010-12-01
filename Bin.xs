@@ -177,7 +177,7 @@ int _match_ip(pTHX_ XS2_CTX * ctx, char *ip, char **match)
   _dump(p, m_addr, 0);
   m_addr = 0;
   */
-  for (i=0; i<32; i++) {
+  for (i=0; i<=32; i++) {
     if (p->code != NULL) {
 	/*printf("p->code: %s(%x)\n", p->code, p->code);*/
       if (match != NULL && *match != NULL) {

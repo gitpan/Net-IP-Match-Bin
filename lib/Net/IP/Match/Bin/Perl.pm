@@ -90,7 +90,7 @@ sub match_ip {
     my $tree = $self->{Tree};
     my $addr = unpack 'N', pack 'C4', split /[.]/, $ip;
 
-    for (my $i = 0; $i < 32; $i++) {
+    for (my $i = 0; $i <= 32; $i++) {
 	return $tree->[2] if defined $tree->[2];
 	my $bit = $addr & $BITS[$i] ? 1 : 0;
 	return undef unless defined $tree->[$bit];

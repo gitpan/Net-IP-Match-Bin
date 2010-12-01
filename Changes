@@ -11,13 +11,18 @@ Revision history for Perl extension Net-IP-Match-Bin.
 	- added Perl alternative.
 	- added bench mark result.
 
-0.03  Thu Oct 22
+0.03  Thu Oct 22 00:00:00 2009
 	- little bit speed-up Perl alt. verson.
 
-0.04  Thu Nov 14
+0.04  Sat Nov 14 00:00:00 2009
 	- Fix mem leak at add().
 	- Fix _add() for registering ARRAY data.
 
-0.05  Thu Nov 17
+0.05  Tue Nov 17 00:00:00 2009
 	- Fix Makefile.PL which cannot compile XS.
 	- little Fix document
+
+0.06  Wed Dec  1 16:50:00 2010
+	- Fix Bin.xs, lib/Net/IP/Match/Bin/Perl.pm for /32-net bug.
+		Thanks, Oliver Paukstadt.
+

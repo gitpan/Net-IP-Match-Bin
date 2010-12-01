@@ -1,5 +1,5 @@
 
-use Test::More tests => 6;
+use Test::More tests => 7;
 
 use Net::IP::Match::Bin::Perl;
 
@@ -26,6 +26,10 @@ ok(!defined($res), "match 4");
 $res = match_ip("172.16.5.1", "172.16.0.0/16", "192.168.1.0/24");
 ok (defined($res) && ($res eq "172.16.0.0/16"), "match 5 res=$res");
 
+$res = match_ip("172.16.5.1", "172.16.5.1/32", "192.168.1.0/24");
+ok (defined($res) && ($res eq "172.16.5.1/32"), "match 6 res=$res");
+
 $res = match_ip("192.16.5.1", "172.16.0.0/16", "192.168.1.0/24");
-ok (!defined($res), "match 6");
+$res = match_ip("192.16.5.1", "172.16.0.0/16", "192.168.1.0/24");
+ok (!defined($res), "match 7");
 
