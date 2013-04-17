@@ -50,12 +50,12 @@ main ()
 }
 EOT
 
-    my $cc_cmd = "$Config{cc} $Config{ccflags} ";
+    my $cc_cmd = "$Config{cc}";
     my $exe = "conftest$Config{exe_ext}";
     $cc_cmd .= " -o $exe";
 
     my $rc;
-    $rc = system("$cc_cmd $Config{ldflags} conftest.c $Config{libs}");
+    $rc = system("$cc_cmd conftest.c");
     if ($rc) {
 	print "Can't compile test program rc=$rc\n\n";
 	unlink("conftest.c", $exe, "conftest$Config{obj_ext}");

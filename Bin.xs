@@ -53,6 +53,10 @@ typedef struct {
   int m_cur;
 } XS2_CTX;
 
+/* prototypes */
+void print_ip (u_int32_t, int, char **);
+int _inet_aton2(char *, in_addr_t *);
+
 /* allocate mem block */
 Node *alloc_m (XS2_CTX *ctx)
 {
@@ -203,6 +207,7 @@ int _match_ip(pTHX_ XS2_CTX * ctx, char *ip, char **match)
     }
     return 0;
   }
+  return 0;
 }
 
 int _inet_aton2(char *ip, in_addr_t *addr)
@@ -233,7 +238,7 @@ int _inet_aton2(char *ip, in_addr_t *addr)
   return(1);
 }
 
-_dump (Node *p, u_int32_t ip, int lvl)
+void _dump (Node *p, u_int32_t ip, int lvl)
 {
   char str[21];
   char *s = str;
@@ -255,18 +260,18 @@ _dump (Node *p, u_int32_t ip, int lvl)
   }
 }
 
-int print_ip (u_int32_t ip, int lvl, char **str)
+void print_ip (u_int32_t ip, int lvl, char **str)
 {
   if (*str != NULL) {
-    return(snprintf(*str, 20, "%u.%u.%u.%u/%d",
+    snprintf(*str, 20, "%u.%u.%u.%u/%d",
 		    (ip & 0xff000000) >> 24,
 		    (ip & 0x00ff0000) >> 16,
 		    (ip & 0x0000ff00) >> 8,
-		    ip & 0x000000ff, lvl));
+		    ip & 0x000000ff, lvl);
   }
 }
 
-int parse_net (char *buf, int len, char **ip, int *mask)
+void parse_net (char *buf, int len, char **ip, int *mask)
 {
     /* warn:
 	*ip must be allocated at least 16 bytes long.
@@ -298,12 +303,11 @@ int parse_net (char *buf, int len, char **ip, int *mask)
     if (m < 0 || m > 32)
       m = 32;
     *mask = m;
-
 }
 
-int _add(pTHX_ XS2_CTX* ctx, SV* sv)
+void _add(pTHX_ XS2_CTX* ctx, SV* sv)
 {
-  int i, j, num;
+  int j, num;
   STRLEN len;
   I32 klen;
   SV** val;
@@ -502,8 +506,6 @@ dump(self)
 
      PREINIT:
 	XS2_CTX* ctx;
-	SV* sv;
-	int i;
 
      PPCODE:
 	if (!SvROK(self)) {
