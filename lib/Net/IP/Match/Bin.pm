@@ -25,7 +25,7 @@ our @EXPORT = qw(
 	match_ip
 );
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 eval {
     require XSLoader;

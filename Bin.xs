@@ -17,6 +17,11 @@
 
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <stdint.h>
+typedef   uint32_t    u_int32_t;
+#endif
+
 #ifdef SOLARIS
 typedef   uint32_t    u_int32_t;
 #else

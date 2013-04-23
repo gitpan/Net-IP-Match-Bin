@@ -30,3 +30,6 @@ Revision history for Perl extension Net-IP-Match-Bin.
 	- Fix Bin.xs for supress compiler warnings.
 	- Fix Makefile.PL for silly compile checking.
 
+0.08  Thu Apr 23 23:54:34 2013
+	- Fix Bin.xs for _WIN32 compile errors.
+
