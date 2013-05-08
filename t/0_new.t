@@ -5,7 +5,7 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 BEGIN { use_ok('Net::IP::Match::Bin') };
 
 #########################
@@ -15,3 +15,6 @@ BEGIN { use_ok('Net::IP::Match::Bin') };
 
 my $ipm = Net::IP::Match::Bin->new();
 ok(defined($ipm), "new");
+
+$ipm = Net::IP::Match::Bin->new("1.2.3.4/20");
+ok(defined($ipm), "new with arg");

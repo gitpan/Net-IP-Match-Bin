@@ -1,231 +1,81 @@
-Net::IP::Match::Bin version 0.02
+Net::IP::Match::Bin version 0.09
 =============================
 
-
-
 NAME
-       Net::IP::Match::Bin - Perl extension for match IP addresses against Net
-       ranges
+    Net::IP::Match::Bin - Perl extension for match IP addresses against Net
+    ranges
 
 SYNOPSIS
-         use Net::IP::Match::Bin;
+      use Net::IP::Match::Bin;
 
-         my $ipm = Net::IP::Match::Bin->new();
-         $ipm->add("10.1.1.0/25", ...);
-         ...
-         $ipm->add("192.168.2.128/26", ...);
+      my $ipm = Net::IP::Match::Bin->new();
+      $ipm->add("10.1.1.0/25", ...);
+      ...
+      $ipm->add("192.168.2.128/26", ...);
 
-         $cidr = $ipm->match_ip("192.168.2.131");
+      $cidr = $ipm->match_ip("192.168.2.131");
 
 DESCRIPTION
-       This module is XS implementation of matching IP addresses against Net
-       ranges.  Using similar method to Net::IP::Match::Regexp in storing Net
-       ranges into memory. By implementing in XS C-code, and does not use
-       regexp, more fast setup time and less using memory.  This module is
-       useful when Net ranges change often or reusing range data won't be
-       suitable.
+    This module is XS implementation of matching IP addresses against Net
+    ranges. Using similar method to Net::IP::Match::Regexp in storing Net
+    ranges into memory. By implementing in XS C-code, and does not use
+    regexp, more fast setup time and less using memory. This module is
+    useful when Net ranges change often or reusing range data won't be
+    suitable.
 
 METHODS
-       new()
-           Create IP range object and initialize it.
+    new()
+        Create IP range object and initialize it.
 
-       $ipm->add( $net )
-           Add an Network address (xxx.xxx.xxx.xxx/mask) into the object. mask
-           is 1 .. 32 CIDR mask bit value.
+    $ipm->add( $net | $arrayref | $hashref, ... )
+        Add Network address (xxx.xxx.xxx.xxx/mask) into the object. mask is
+        1 .. 32 CIDR mask bit value.
 
-       $cidr = $ipm->match_ip( $ip )
-           Searches matching $ip against previously setup networks. Returns
-           matched Network in CIDR format (xxx.xxx.xxx.xxx/mask). or undef
-           unless matched.
+            $ipm->add( [ "10.1.0.0/16", "10.2.2.128/25", "192.168.0.0/27" ] );
+
+            $ipm->add( { "10.1.0.0/17" => "Net A", "10.2.2.0/24" => "Net B",
+                        "192.168.0.0/27" => "Net X" } );
+
+        When HASH ref is used as arguments, match_ip() returns the value
+        when matched. Note that CIDRs could be aggregated internaly, these
+        values may be lost in aggregation.
+
+    $ipm->add_range( $range_str, ... )
+        Adds IP range into the object. $range_str would be
+
+            $range_str = "1.2.3.4-10.20.30.41";
+
+    $cidr = $ipm->match_ip( $ip )
+        Searches matching $ip against previously setup networks. Returns
+        matched Network in CIDR format (xxx.xxx.xxx.xxx/mask). or undef
+        unless matched.
+
+    $list = $ipm->list()
+    @list = $ipm->list()
+        Lists the current CIDR list which has been added previously. CIDRs
+        are aggregated internaly and the list shows this internal data. In
+        scalar context, list() returns reference to the array. On list
+        context, returns array itself.
+
+    $ipm->clean()
+        Remove redundant CIDR data from the object. Note that this method
+        does not free memories, so, if you would like to, generate list()
+        and create new object from it.
+
+FUNCTIONS
+    match_ip($ip, $cidr1, $cidr2,...)
+        function call match_ip() acts like as Net::IP::Match 's same name
+        function. searches IP of first argument matches againsts others.
 
 SEE ALSO
-       Net::IP::Match::Regexp
-
+    Net::IP::Match::Regexp, Net::CIDR::Lite, Net::IP::Match
 
 AUTHOR
-       Tomo, <tomo at c-wind com>
+    Tomo.M <tomo at cpan org>
 
 COPYRIGHT AND LICENSE
-       Copyright (C) 2009 by Tomo
+    Copyright (C) 2013 by Tomo
 
-       This library is free software; you can redistribute it and/or modify it
-       under the same terms as Perl itself, either Perl version 5.8.8 or, at
-       your option, any later version of Perl 5 you may have available.
-
-
-INSTALLATION
-
-To install this module type the following:
-
-   perl Makefile.PL
-   make
-   make test
-   make install
-
-DEPENDENCIES
-
-This module requires C compiler and standard C Libraries to build.
-
-
-COPYRIGHT AND LICENCE
-
-
-Copyright (C) 2009 by Tomo
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.8 or,
-at your option, any later version of Perl 5 you may have available.
-
-TODO
-
-o Measure appropriate memory size. especially for setup time.
-o .., so on.
-
-
-SPEED TEST
-
-output from benchmark/speedtest.pl within the Net::IP::Match::Regexp package.
-(made modification for my package. diff is below)
-
-[ Mac mini / Core 2 Duo 2GHz 4GB Mem / Mac OS X 10.5.8 ]
-
-$ ./speedtest3.pl -s -n 1,10,100,1000,10000,100000 -i 100000
-Initialization time of test: 1.703722
-
-Networks: 1, IPs: 100000
-Test name              | Setup time | Run time | Total time | Errors
------------------------+------------+----------+------------+--------
-Net::IP::Match::XS2    |    0.023   |  0.208   |    0.231   | n/a
-Net::IP::Match::Bin    |    0.023   |  0.213   |    0.236   | n/a
-Net::IP::Match::Regexp |    0.000   |  0.861   |    0.862   | n/a
-...::Match::Bin::Perl  |    0.000   |  4.197   |    4.197   | n/a
-
-Networks: 10, IPs: 100000
-Test name              | Setup time | Run time | Total time | Errors
------------------------+------------+----------+------------+--------
-Net::IP::Match::XS2    |    0.023   |  0.204   |    0.227   | n/a
-Net::IP::Match::Bin    |    0.023   |  0.213   |    0.236   | n/a
-Net::IP::Match::Regexp |    0.002   |  0.949   |    0.951   | n/a
-...::Match::Bin::Perl  |    0.001   |  4.221   |    4.222   | n/a
-
-Networks: 100, IPs: 100000
-Test name              | Setup time | Run time | Total time | Errors
------------------------+------------+----------+------------+--------
-Net::IP::Match::XS2    |    0.025   |  0.211   |    0.236   | n/a
-Net::IP::Match::Bin    |    0.023   |  0.219   |    0.242   | n/a
-Net::IP::Match::Regexp |    0.013   |  1.000   |    1.013   | n/a
-...::Match::Bin::Perl  |    0.007   |  4.253   |    4.260   | n/a
-
-Networks: 1000, IPs: 100000
-Test name              | Setup time | Run time | Total time | Errors
------------------------+------------+----------+------------+--------
-Net::IP::Match::XS2    |    0.024   |  0.238   |    0.262   | n/a
-Net::IP::Match::Bin    |    0.025   |  0.248   |    0.273   | n/a
-Net::IP::Match::Regexp |    0.114   |  1.067   |    1.181   | n/a
-...::Match::Bin::Perl  |    0.068   |  4.485   |    4.553   | n/a
-
-Networks: 10000, IPs: 100000
-Test name              | Setup time | Run time | Total time | Errors
------------------------+------------+----------+------------+--------
-Net::IP::Match::XS2    |    0.036   |  0.332   |    0.368   | n/a
-Net::IP::Match::Bin    |    0.042   |  0.343   |    0.386   | n/a
-Net::IP::Match::Regexp |    0.677   |  1.137   |    1.814   | n/a
-...::Match::Bin::Perl  |    0.692   |  4.372   |    5.065   | n/a
-
-Networks: 100000, IPs: 100000
-Test name              | Setup time | Run time | Total time | Errors
------------------------+------------+----------+------------+--------
-Net::IP::Match::XS2    |    0.174   |  0.336   |    0.510   | n/a
-Net::IP::Match::Bin    |    0.234   |  0.351   |    0.585   | n/a
-Net::IP::Match::Regexp |    6.180   |  1.141   |    7.320   | n/a
-...::Match::Bin::Perl  |    7.010   |  4.316   |   11.326   | n/a
-
-
- diff -u speedtest.pl.orig speedtest.pl
---- speedtest.pl.orig   2009-10-02 21:00:49.000000000 +0900
-+++ speedtest.pl        2009-10-23 09:55:36.000000000 +0900
-@@ -3,7 +3,8 @@
- use strict;
- use lib qw(lib);
- use Net::IP::Match::Regexp qw();
--use Net::IP::Match::XS qw();
-+use Net::IP::Match::XS2 qw();
-+use Net::IP::Match::Bin qw();
-
- use Time::HiRes qw(gettimeofday tv_interval);
- use List::Util qw(max);
-@@ -92,19 +93,43 @@
-       },
-    },
-    {
--      name => "Net::IP::Match::XS", ###############
-+      name => "Net::IP::Match::XS2", ###############
-       bool => 1, # this test just returns true/false, not the ID of the matched network
-       setup => sub {
-          my $ranges = shift;
-          my $test = shift;
-
--         return [map {$_->[3]."/".$_->[1]} @$ranges];
-+       my $ipm = Net::IP::Match::XS2->new();
-+
-+       $ipm->add($_->[3], $_->[1]) for @$ranges;
-+       return $ipm;
-+
-+      },
-+      match => sub {
-+         my $ip = shift;
-+         my $ranges = shift;
-+
-+         return $ranges->match_ip($ip);
-+      },
-+   },
-+   {
-+      name => "Net::IP::Match::Bin", ###############
-+      bool => 1, # this test just returns true/false, not the ID of the matched network
-+      setup => sub {
-+         my $ranges = shift;
-+         my $test = shift;
-+
-+       my $ipm = Net::IP::Match::Bin->new();
-+
-+       $ipm->add($_->[3]."/".$_->[1]) for @$ranges;
-+       return $ipm;
-+
-       },
-       match => sub {
-          my $ip = shift;
-          my $ranges = shift;
-
--         return Net::IP::Match::XS::match_ip($ip, @$ranges);
-+         return $ranges->match_ip($ip);
-       },
-    },
-    {
-@@ -128,6 +153,26 @@
-          return Net::IP::Match::Regexp::match_ip($ip, $ranges),
-       },
-    },
-+   {
-+      name => "...::Match::Bin::Perl", ###############
-+      bool => 1, # this test just returns true/false, not the ID of the matched network
-+      setup => sub {
-+         my $ranges = shift;
-+         my $test = shift;
-+
-+       my $ipm = Net::IP::Match::Bin::Perl->new();
-+
-+       $ipm->add($_->[3]."/".$_->[1]) for @$ranges;
-+       return $ipm;
-+
-+      },
-+      match => sub {
-+         my $ip = shift;
-+         my $ranges = shift;
-+
-+         return $ranges->match_ip($ip);
-+      },
-+   },
- );
-
- my %tests = map {$_->{name} => $_} @tests;
-
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself, either Perl version 5.8.8 or, at
+    your option, any later version of Perl 5 you may have available.

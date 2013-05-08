@@ -25,7 +25,7 @@ our @EXPORT = qw(
 	match_ip
 );
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 eval {
     require XSLoader;
@@ -90,6 +90,7 @@ won't be suitable.
 
 Create IP range object and initialize it.
 
+
 =item $ipm->add( $net | $arrayref | $hashref, ... )
 
 Add Network address (xxx.xxx.xxx.xxx/mask) into the object. mask is 1 .. 32 CIDR mask bit value.
@@ -98,29 +99,69 @@ Add Network address (xxx.xxx.xxx.xxx/mask) into the object. mask is 1 .. 32 CIDR
 
     $ipm->add( { "10.1.0.0/17" => "Net A", "10.2.2.0/24" => "Net B",
 		"192.168.0.0/27" => "Net X" } );
-When HASH ref is used as arguments, match_ip() returns the value when matched.
 
+When HASH ref is used as arguments, match_ip() returns the value when matched. Note that
+CIDRs could be aggregated internaly, these values may be lost in aggregation.
+
+
+=item $ipm->add_range( $range_str, ... )
+
+Adds IP range into the object. $range_str would be
+
+    $range_str = "1.2.3.4-10.20.30.41";
 
 =item $cidr = $ipm->match_ip( $ip )
 
 Searches matching $ip against previously setup networks. Returns matched
 Network in CIDR format (xxx.xxx.xxx.xxx/mask). or undef unless matched.
 
+=item $list = $ipm->list()
+
+=item @list = $ipm->list()
+
+Lists the current CIDR list which has been added previously. CIDRs are aggregated internaly and
+the list shows this internal data. In scalar context, list() returns reference to the array. On
+list context, returns array itself.
+
+=item $ipm->clean()
+
+Remove redundant CIDR data from the object. Note that this method does not free memories, so,
+if you would like to, generate list() and create new object from it.
 
 =back
 
+=head1 FUNCTIONS
+
+=over
+
+=cut
+
+=item match_ip($ip, $cidr1, $cidr2,...)
+
+function call match_ip() acts like as Net::IP::Match 's same name function. searches IP of first
+argument matches againsts others.
+ 
+
+=back
+
+
+
 =head1 SEE ALSO
 
-=head2 L<Net::IP::Match::Regexp>
+=over
+
+=item L<Net::IP::Match::Regexp>, L<Net::CIDR::Lite>, L<Net::IP::Match>
+
+=back
 
 
 =head1 AUTHOR
 
-Tomo, E<lt>tomo at c-wind comE<gt>
+Tomo.M E<lt>tomo at cpan orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009 by Tomo
+Copyright (C) 2013 by Tomo
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.8 or,

@@ -33,3 +33,8 @@ Revision history for Perl extension Net-IP-Match-Bin.
 0.08  Thu Apr 23 23:54:34 2013
 	- Fix Bin.xs for _WIN32 compile errors.
 
+0.09  Thu May  5 20:00:01 2013
+	- Fix Bin.xs parse_ip hazardus when invalid data.
+	- Add add_range(), list(), clean() methods.
+	- some document fixes.
+
