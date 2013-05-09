@@ -60,6 +60,7 @@ typedef struct {
   Node *root;
   MCB *m_cb;
   int m_cur;
+  int clean;
 } XS2_CTX;
 
 /* prototypes */
@@ -135,6 +136,7 @@ int _inet_aton2(char *ip, in_addr_t *addr)
     ((pt[1] & 0xff)<<16) |
     ((pt[2] & 0xff)<<8) |
     (pt[3] & 0xff);
+
   return(1);
 }
 
@@ -171,10 +173,8 @@ int parse_net4(char *buf, int len, in_addr_t *addr, int *mask)
     }
     d[j] = '\0';
 
-    /* printf ("IP: %s %s\n", ip, d); */
-
     m = atoi(d);
-    if (m < 0 || m > 32)
+    if (m <= 0 || m > 32)
       m = 32;
     *mask = m;
     return(1);
@@ -197,7 +197,6 @@ int regist4(XS2_CTX *ctx, in_addr_t in_addr, int mask, char *desc)
       } else {
 	return(-1);
       }
-      /* printf("%x\n", p); */
     } else {
       if (p->zero == NULL) {
 	/* alloc */
@@ -208,7 +207,6 @@ int regist4(XS2_CTX *ctx, in_addr_t in_addr, int mask, char *desc)
       } else {
 	return(-1);
       }
-      /* printf("%x\n", p); */
     }
   }
   if (desc != NULL) {
@@ -217,7 +215,9 @@ int regist4(XS2_CTX *ctx, in_addr_t in_addr, int mask, char *desc)
   } else {
     p->code = (char *)(-1);
   }
-  /* printf("%s/%d\n", ip, mask); */
+
+  ctx->clean = 0; /* flag dirty */
+
   return(1);
 }
 
@@ -330,7 +330,7 @@ void print_ip (u_int32_t ip, int lvl, char **str)
 
 #define is_leaf(a)  ((a) && (a)->zero == NULL && (a)->one == NULL)
 
-void _clean (Node *p, int lvl, int cl)
+void _clean_up (Node *p, int lvl, int cl)
 {
 
   /* aggregate */
@@ -349,13 +349,13 @@ void _clean (Node *p, int lvl, int cl)
     if (cl && is_leaf(p->zero))
       p->zero = NULL;
     else
-      _clean(p->zero, lvl+1, cl);
+      _clean_up(p->zero, lvl+1, cl);
   }
   if (p->one) {
     if (cl && is_leaf(p->one))
       p->one = NULL;
     else
-      _clean(p->one, lvl+1, cl);
+      _clean_up(p->one, lvl+1, cl);
   }
 
   /* re-aggregate */
@@ -372,6 +372,14 @@ void _clean (Node *p, int lvl, int cl)
   if (cl && is_leaf(p->one))
     p->one = NULL;
 
+}
+
+void _clean (pTHX_ XS2_CTX* ctx)
+{
+  if (!ctx->clean) {
+    _clean_up(ctx->root, 0, 0);
+    ctx->clean = 1;
+  }
 }
 
 void _dump (Node *p, u_int32_t ip, int lvl)
@@ -435,22 +443,22 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
   int j, num;
   STRLEN len;
   I32 klen;
-  SV** val;
+  SV* aval;
   SV* hval;
   char *str, *key;
 
   switch (SvTYPE(sv)) {
   case SVt_PVAV:
-    num = av_len((AV*)sv);
-    /* printf("num: %d\n", num); */
-    for (j=0; j<=num; j++) {
-      val = av_fetch((AV*)sv, j, 0);
-      str = SvPVbyte(*val, len);
-      /*printf("AV(%d)> %s (%d)\n", j, str, len);*/
+    for(;;) {
+      aval = av_shift((AV*)sv);
+      if (aval == &PL_sv_undef)
+	break;
+      str = SvPVbyte(aval, len);
       if (regist(ctx, str, len, NULL) < 0)
 	return (-1);
     }
     break;
+
   case SVt_PVHV:
     num = hv_iterinit((HV*)sv);
     for (j=0; j<num; j++) {
@@ -469,6 +477,7 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
       }
     }
     break;
+
   case SVt_PV:
   default:
     str = SvPVbyte(sv, len);
@@ -481,19 +490,17 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
 
 int _add_range(pTHX_ XS2_CTX* ctx, SV* sv)
 {
-  int j, num;
   STRLEN len;
-  SV** val;
+  SV* aval;
   char *str;
 
   switch (SvTYPE(sv)) {
   case SVt_PVAV:
-    num = av_len((AV*)sv);
-    /* printf("num: %d\n", num); */
-    for (j=0; j<=num; j++) {
-      val = av_fetch((AV*)sv, j, 0);
-      str = SvPVbyte(*val, len);
-      /*printf("AV(%d)> %s (%d)\n", j, str, len);*/
+    for(;;) {
+      aval = av_shift((AV*)sv);
+      if (aval == &PL_sv_undef)
+	break;
+      str = SvPVbyte(aval, len);
       if (regist_range(ctx, str, len)<0)
 	return (-1);
     }
@@ -527,7 +534,7 @@ int _match_ip(pTHX_ XS2_CTX * ctx, char *ip, char **match)
   */
   for (i=0; i<=32; i++) {
     if (p->code != NULL) {
-	/*printf("p->code: %s(%x)\n", p->code, p->code);*/
+      /*printf("p->code: %s(%x)\n", p->code, p->code);*/
       if (match != NULL && *match != NULL) {
 	if (p->code == (char *)(-1)) {
 	   print_ip(m_addr, i, match);
@@ -723,7 +730,7 @@ match_ip(...)
 	}
 
 	p = out;
-	_clean(ctx->root, 0, 0);
+	_clean(aTHX_ ctx);
 	res = _match_ip(aTHX_ ctx, ip, &p);
 	if (func_call > 0) {
 	  free_m(aTHX_ ctx);
@@ -754,21 +761,26 @@ list(self)
 	    XSRETURN_UNDEF;
 	} else {
 	    if (gimme == G_VOID)
-	      XSRETURN_EMPTY;
+		XSRETURN_EMPTY;
+	    
 	    ctx = INT2PTR(XS2_CTX*, SvIV(SvRV(self)));
 	    out = newAV();
-	    _clean(ctx->root, 0, 0);
+	    _clean(aTHX_ ctx);
 	    _list(out, ctx->root, 0, 0);
-	    if (gimme == G_SCALAR) {
-	      ST(0) = newRV((SV *)out);
-	      sv_2mortal(ST(0));
-	      len = 1;
-	    } else {
-	      len = av_len(out) + 1;
-	      EXTEND(SP, len+1);
-	      for (i = 0; i < len; i++) {
-		ST(i) = sv_2mortal(av_shift(out));
-	      }
+	    switch(gimme) {
+	    case G_SCALAR:
+		ST(0) = newRV((SV *)out);
+		sv_2mortal(ST(0));
+		len = 1;
+		break;
+
+	    default:
+		len = av_len(out) + 1;
+		EXTEND(SP, len+1);
+		for (i = 0; i < len; i++) {
+		    ST(i) = sv_2mortal(av_shift(out));
+		}
+		break;
 	    }
 	}
 	XSRETURN(len);
@@ -785,7 +797,7 @@ clean(self)
 	    XSRETURN_UNDEF;
 	} else {
 	    ctx = INT2PTR(XS2_CTX*, SvIV(SvRV(self)));
-	    _clean(ctx->root, 0, 0);
+	    _clean(aTHX_ ctx);
 	}
 	XSRETURN_YES;
 
@@ -801,7 +813,7 @@ dump(self)
 	    XSRETURN_UNDEF;
 	} else {
 	    ctx = INT2PTR(XS2_CTX*, SvIV(SvRV(self)));
-	    _clean(ctx->root, 0, 0);
+	    _clean(aTHX_ ctx);
 	    _dump(ctx->root, 0, 0);
 	}
 	XSRETURN_YES;

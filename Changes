@@ -38,3 +38,6 @@ Revision history for Perl extension Net-IP-Match-Bin.
 	- Add add_range(), list(), clean() methods.
 	- some document fixes.
 
+0.10  Thu May  9 12:00:01 2013
+	- Fix Bin.xs for invalid net addition.
+	- Fix _clean() for parformance flaw.
