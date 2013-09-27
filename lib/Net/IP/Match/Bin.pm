@@ -1,6 +1,6 @@
 package Net::IP::Match::Bin;
 
-use 5.005;
+use 5.007;
 use strict;
 use warnings;
 
@@ -25,27 +25,10 @@ our @EXPORT = qw(
 	match_ip
 );
 
-our $VERSION = '0.10';
+our $VERSION = '0.12';
 
-eval {
-    require XSLoader;
-    XSLoader::load('Net::IP::Match::Bin', $VERSION);
-};
-if ($@) {
-    my $olderr = $@;
-    eval {
-	# Try to load the pure perl version
-	require Net::IP::Match::Bin::Perl;
-
-	push(@ISA, "Net::IP::Match::Bin::Perl");
-	*match_ip = \&Net::IP::Match::Bin::Perl::match_ip;
-    };
-
-    if ($@) {
-	# restore the original error
-	die $olderr;
-    }
-}
+require XSLoader;
+XSLoader::load('Net::IP::Match::Bin', $VERSION);
 
 # Preloaded methods go here.
 

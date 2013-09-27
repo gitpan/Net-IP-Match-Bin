@@ -126,17 +126,23 @@ int _inet_aton2(char *ip, in_addr_t *addr)
 	break;
     }
     buf[i][j] = '\0';
-    pt[i] = atoi((char*)&buf[i][0]);
+    /*    pt[i] = atoi((char*)&buf[i][0]); */
+    pt[i] = atoi((char*)&buf[i][0]) & 0xff;
     /* check */
+    /*
     if (pt[i] < 0 || pt[i] > 255)
-      return(-1);
+    return(-1);
+    */
   }
 
+  /*
   *addr = (pt[0] << 24) |
     ((pt[1] & 0xff)<<16) |
     ((pt[2] & 0xff)<<8) |
     (pt[3] & 0xff);
-
+  */
+  *addr = (pt[0]<<24)|(pt[1]<<16)|(pt[2]<<8)|pt[3];
+  
   return(1);
 }
 
@@ -633,7 +639,10 @@ add(self, ...)
 	      XSRETURN_UNDEF;
 	    }
 	}
-	XSRETURN_YES;
+	ST(0) = newSVsv(self);
+	sv_2mortal(ST(0));
+	XSRETURN(1);
+	/*XSRETURN_YES;*/
 
 void
 add_range(self, ...)
@@ -665,7 +674,10 @@ add_range(self, ...)
 	      XSRETURN_UNDEF;
 	    }
 	}
-	XSRETURN_YES;
+	ST(0) = newSVsv(self);
+	sv_2mortal(ST(0));
+	XSRETURN(1);
+	/*XSRETURN_YES;*/
 
 void
 DESTROY(self)

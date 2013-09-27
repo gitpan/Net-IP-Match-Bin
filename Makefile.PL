@@ -1,4 +1,4 @@
-use 5.005;
+use 5.007;
 use Config qw(%Config);
 use ExtUtils::MakeMaker;
 

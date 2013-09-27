@@ -11,7 +11,7 @@ t/1.1_add.t
 t/1.2_add_range.t
 t/2_match.t
 t/3_list.t
-t/Z_perl.t
+t/Z_perl.x
 typemap
 META.yml                                 Module meta-data (added by MakeMaker)
 META.json                                Module meta-data (added by MakeMaker)
