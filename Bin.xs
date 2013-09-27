@@ -448,18 +448,20 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
 {
   int j, num;
   STRLEN len;
+  I32 alen;
   I32 klen;
-  SV* aval;
+  SV** p_aval;
   SV* hval;
   char *str, *key;
 
   switch (SvTYPE(sv)) {
   case SVt_PVAV:
-    for(;;) {
-      aval = av_shift((AV*)sv);
-      if (aval == &PL_sv_undef)
-	break;
-      str = SvPVbyte(aval, len);
+    alen = av_len((AV*)sv);
+    for(j=0; j<=alen; j++) {
+      p_aval = av_fetch((AV*)sv, j, 1);
+      if (*p_aval == &PL_sv_undef)
+	continue;
+      str = SvPVbyte(*p_aval, len);
       if (regist(ctx, str, len, NULL) < 0)
 	return (-1);
     }
@@ -496,17 +498,20 @@ int _add(pTHX_ XS2_CTX* ctx, SV* sv)
 
 int _add_range(pTHX_ XS2_CTX* ctx, SV* sv)
 {
+  int  i;
   STRLEN len;
-  SV* aval;
+  I32 alen;
+  SV** p_aval;
   char *str;
 
   switch (SvTYPE(sv)) {
   case SVt_PVAV:
-    for(;;) {
-      aval = av_shift((AV*)sv);
-      if (aval == &PL_sv_undef)
-	break;
-      str = SvPVbyte(aval, len);
+    alen = av_len((AV*)sv);
+    for(i=0; i<=alen; i++) {
+      p_aval = av_fetch((AV*)sv, i, 1);
+      if (*p_aval == &PL_sv_undef)
+	continue;
+      str = SvPVbyte(*p_aval, len);
       if (regist_range(ctx, str, len)<0)
 	return (-1);
     }

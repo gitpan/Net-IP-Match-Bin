@@ -49,3 +49,7 @@ Revision history for Perl extension Net-IP-Match-Bin.
 	- now add()/add_range() returns the object itself when success.
 	.. enabling usage like, $obj->add(\@nets)->list.
 
+0.13  Fri Sep 27 21:10:00 2013
+	- Fix add()/add_range() that was destructive when arguments
+	.. were ARRAY.
+
