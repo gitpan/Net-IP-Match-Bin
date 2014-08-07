@@ -1,4 +1,4 @@
-Net::IP::Match::Bin version 0.10
+Net::IP::Match::Bin version 0.14
 =============================
 
 NAME
@@ -14,6 +14,7 @@ SYNOPSIS
       $ipm->add("192.168.2.128/26", ...);
 
       $cidr = $ipm->match_ip("192.168.2.131");
+      $cidr = $ipm->match_ip("192.168.2.128/29");
 
 DESCRIPTION
     This module is XS implementation of matching IP addresses against Net
@@ -46,7 +47,8 @@ METHODS
             $range_str = "1.2.3.4-10.20.30.41";
 
     $cidr = $ipm->match_ip( $ip )
-        Searches matching $ip against previously setup networks. Returns
+    $cidr = $ipm->match_ip( $net )
+        Searches matching $ip or $net against previously setup networks. Returns
         matched Network in CIDR format (xxx.xxx.xxx.xxx/mask). or undef
         unless matched.
 
@@ -74,7 +76,7 @@ AUTHOR
     Tomo.M <tomo at cpan org>
 
 COPYRIGHT AND LICENSE
-    Copyright (C) 2013 by Tomo
+    Copyright (C) 2014 by Tomo
 
     This library is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself, either Perl version 5.8.8 or, at

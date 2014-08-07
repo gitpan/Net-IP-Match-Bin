@@ -25,7 +25,7 @@ our @EXPORT = qw(
 	match_ip
 );
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 require XSLoader;
 XSLoader::load('Net::IP::Match::Bin', $VERSION);
@@ -51,6 +51,7 @@ Net::IP::Match::Bin - Perl extension for match IP addresses against Net ranges
   $ipm->add("192.168.2.128/26", ...);
 
   $cidr = $ipm->match_ip("192.168.2.131");
+  $cidr = $ipm->match_ip("192.168.2.128/29");
 
 
 =head1 DESCRIPTION
@@ -95,7 +96,9 @@ Adds IP range into the object. $range_str would be
 
 =item $cidr = $ipm->match_ip( $ip )
 
-Searches matching $ip against previously setup networks. Returns matched
+=item $cidr = $ipm->match_ip( $net )
+
+Searches matching $ip or $net against previously setup networks. Returns matched
 Network in CIDR format (xxx.xxx.xxx.xxx/mask). or undef unless matched.
 
 =item $list = $ipm->list()
@@ -144,7 +147,7 @@ Tomo.M E<lt>tomo at cpan orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2013 by Tomo
+Copyright (C) 2014 by Tomo
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.8 or,

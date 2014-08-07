@@ -216,8 +216,10 @@ int regist4(XS2_CTX *ctx, in_addr_t in_addr, int mask, char *desc)
     }
   }
   if (desc != NULL) {
-    /*printf("desc: %s(%x)\n", desc, desc);*/
-    p->code = desc;
+	/*
+    printf("desc: %s(%x)\n", desc, desc);
+	*/
+    p->code = strdup(desc);
   } else {
     p->code = (char *)(-1);
   }
@@ -341,6 +343,8 @@ void _clean_up (Node *p, int lvl, int cl)
 
   /* aggregate */
   if (is_leaf(p->zero) && is_leaf(p->one)) {
+    if (p->code != NULL  && p->code != (char *)(-1))
+      free(p->code);
     p->code = (char *)(-1);
     p->zero = NULL;
     p->one = NULL;
@@ -366,6 +370,8 @@ void _clean_up (Node *p, int lvl, int cl)
 
   /* re-aggregate */
   if (is_leaf(p->zero) && is_leaf(p->one)) {
+    if (p->code != NULL && p->code != (char *)(-1))
+      free(p->code);
     p->code = (char *)(-1);
     p->zero = NULL;
     p->one = NULL;
@@ -526,26 +532,33 @@ int _add_range(pTHX_ XS2_CTX* ctx, SV* sv)
   return (1);
 }
 
-int _match_ip(pTHX_ XS2_CTX * ctx, char *ip, char **match)
+int _match_ip(pTHX_ XS2_CTX * ctx, SV* net, char **match)
 {
   /* warn:
 	*match can be filled a string "xxx.xxx.xxx.xxx/NN"
 	or pointer will be replaced as p->code
   */
+  char *str;
+  STRLEN len;
   in_addr_t addr, m_addr;
+  int mask;
   Node *p;
   int i;
 
-  _inet_aton2(ip, &addr);
+  str = SvPVbyte(net, len);
+  parse_net4(str, len, &addr, &mask);
+  /* _inet_aton2(ip, &addr); */
   m_addr = 0;
   p = ctx->root;
   /*
   _dump(p, m_addr, 0);
   m_addr = 0;
   */
-  for (i=0; i<=32; i++) {
+  for (i=0; i<=mask; i++) {
     if (p->code != NULL) {
-      /*printf("p->code: %s(%x)\n", p->code, p->code);*/
+	/*
+      printf("p->code: %s(%x) mask=%d i=%d \n", p->code, p->code, mask, i);
+	*/
       if (match != NULL && *match != NULL) {
 	if (p->code == (char *)(-1)) {
 	   print_ip(m_addr, i, match);
@@ -567,8 +580,16 @@ int _match_ip(pTHX_ XS2_CTX * ctx, char *ip, char **match)
 	continue;
       }
     }
+	/*
+    print_ip(m_addr, i, &str);
+    printf("||| mask=%d i=%d where=%s one(%p) zero(%p) code(%p)\n", mask, i, str, p->one, p->zero, p->code);
+	*/
     return 0;
   }
+	/*
+  print_ip(m_addr, i, &str);
+  printf(">>> mask=%d i=%d where=%s one(%p) zero(%p) code(%p)\n", mask, i, str, p->one, p->zero, p->code);
+	*/
   return 0;
 }
 
@@ -699,6 +720,7 @@ match_ip(...)
      PREINIT:
 	XS2_CTX* ctx;
 	char *ip;
+	SV* net;
 	STRLEN len;
 	char out[21];
 	char *p;
@@ -730,6 +752,11 @@ match_ip(...)
 	    func_call = 0;
 	}
 	ip = SvPVbyte(ST(i), len);
+	if (SvROK(ST(i))) {
+	    net = SvRV(ST(i));
+	} else {
+	    net = ST(i);
+	}
 
 	/* printf("%s\n", ip); */
 	
@@ -748,7 +775,7 @@ match_ip(...)
 
 	p = out;
 	_clean(aTHX_ ctx);
-	res = _match_ip(aTHX_ ctx, ip, &p);
+	res = _match_ip(aTHX_ ctx, net, &p);
 	if (func_call > 0) {
 	  free_m(aTHX_ ctx);
 	  Safefree(ctx);

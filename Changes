@@ -53,3 +53,7 @@ Revision history for Perl extension Net-IP-Match-Bin.
 	- Fix add()/add_range() that was destructive when arguments
 	.. were ARRAY.
 
+0.14  Thu Aug  7 15:00:00 2014
+	- Fix add() for Hash-ref arguments.
+	- match_ip() can match CIDR not just an IP.
+
